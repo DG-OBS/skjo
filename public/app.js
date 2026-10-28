@@ -283,16 +283,16 @@
     $('#deck').append(deckCard);
     $('#drawn').append(drawnCard);
     $('#discard').append(discardCard);
-    $('#deck').onclick = () => {
+    $('#deck').onclick = () => send(() => {
       const g = room && room.game;
-      if (g && g.current === you && g.step === 'draw') send({ type: 'draw' });
-    };
-    $('#discard').onclick = () => {
+      return g && g.phase === 'playing' && g.current === you && g.step === 'draw' ? { type: 'draw' } : null;
+    });
+    $('#discard').onclick = () => send(() => {
       const g = room && room.game;
-      if (!g || g.current !== you) return;
-      if (g.step === 'draw' && g.discardTop !== null) send({ type: 'take' });
-      else if (g.step === 'decide') send({ type: 'discard' });
-    };
+      if (!g || g.phase !== 'playing' || g.current !== you) return null;
+      if (g.step === 'draw' && g.discardTop !== null) return { type: 'take' };
+      return g.step === 'decide' ? { type: 'discard' } : null;
+    });
   }
   buildPiles();
 
@@ -336,8 +336,8 @@
     boards.get(you).root.querySelector('.grid').addEventListener('click', e => {
       const card = e.target.closest('.card');
       if (!card) return;
-      const action = myCellAction(Number(card.dataset.i));
-      if (action) send(action);
+      const i = Number(card.dataset.i);
+      send(() => myCellAction(i));
     });
   }
 
@@ -355,13 +355,21 @@
     return null;
   }
 
-  function send(action) {
-    if (pending) return;
-    pending = true;
+  // Un clic pendant qu'une requête est en route n'est pas perdu : on le garde et on décide
+  // quoi en faire quand la réponse arrive (avec l'état à jour). Un double-clic ne fait donc pas d'erreur.
+  let queued = null;
+  function send(resolve) {
     Sound.unlock();
+    if (pending) { queued = resolve; return; }
+    const action = resolve();
+    if (!action) return;
+    pending = true;
     server.emit('action', action, res => {
       pending = false;
-      if (res && res.error) { toast(`🤖 ${res.error}`, 'bad'); Sound.error(); }
+      if (res && res.error) { toast(`🤖 ${res.error}`, 'bad'); Sound.error(); queued = null; return; }
+      const next = queued;
+      queued = null;
+      if (next) send(next);
     });
   }
 
@@ -711,7 +719,6 @@
     const prev = room;
     room = st.room;
     you = st.you;
-    pending = false;
     render(prev);
     handleEvents(fresh);
   }
