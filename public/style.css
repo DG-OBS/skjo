@@ -108,15 +108,15 @@ main { padding: 0 16px 24px; max-width: 1200px; margin: 0 auto; }
   background: #0d1430; font-size: 18px; outline: none; transition: border-color .2s, box-shadow .2s;
 }
 .field input:focus, .code-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(79, 209, 255, .2); }
-.avatar-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.avatar-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .avatar-opt {
-  aspect-ratio: 1; padding: 4px; border-radius: 14px; border: 3px solid transparent; background: #0d1430; cursor: pointer;
+  display: block; min-width: 0; width: 100%; padding: 6%; border-radius: 14px; border: 3px solid transparent; background: #0d1430; cursor: pointer;
   transition: transform .15s, border-color .15s;
 }
 .avatar-opt:hover { transform: scale(1.08) rotate(-4deg); }
-.avatar-opt.selected { border-color: var(--orange); background: #22264a; transform: scale(1.08); animation: selectedBounce .5s; }
+.avatar-opt.selected { border-color: var(--orange); background: #22264a; transform: scale(1.05); animation: selectedBounce .5s; }
 @keyframes selectedBounce { 40% { transform: scale(1.25) rotate(8deg); } }
-.avatar-opt .robot { width: 100%; height: 100%; }
+.avatar-opt .robot { display: block; width: 100%; height: auto; aspect-ratio: 1; }
 .or { text-align: center; color: var(--muted); margin: 14px 0; }
 .join-row { display: flex; gap: 10px; }
 .code-input { text-transform: uppercase; letter-spacing: 6px; text-align: center; font-family: 'Bungee', sans-serif; }
