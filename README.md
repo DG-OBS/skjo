@@ -22,20 +22,24 @@ npm start          # http://localhost:3000
 
 Im gleichen WLAN können andere Geräte über `http://<IP-deines-Rechners>:3000` mitspielen.
 
-## Online stellen (kostenlos, z. B. Render)
+## Online stellen auf Vercel
 
-> ⚠️ **Nicht auf Vercel/Netlify/GitHub Pages:** Diese Dienste liefern nur statische Dateien bzw. kurzlebige Funktionen aus. Das Spiel braucht aber einen dauerhaft laufenden Node-Server mit WebSockets (Socket.IO). Dort lädt zwar die Seite, aber „Créer une partie“ meldet *Serveur de jeu introuvable*.
+Vercel hält keine dauerhaften Verbindungen offen. Darum fragt der Browser etwa jede Sekunde den Spielstand über die Funktion `api/room.js` ab, und der Spielstand liegt in **Upstash Redis**. Die Bots ziehen bei diesen Abfragen, sobald sie an der Reihe sind.
 
-1. Auf [render.com](https://render.com) mit GitHub anmelden → **New → Blueprint** → dieses Repo wählen.
-2. `render.yaml` wird automatisch erkannt. Nach dem Deploy die URL teilen – fertig.
-3. Hinweis: Im Gratis-Plan schläft der Server nach ~15 Min. ohne Besucher ein; der erste Aufruf dauert dann ca. 30–60 s.
+Einmalige Einrichtung:
+1. Vercel-Dashboard → Projekt **skjo** → Tab **Storage** → **Create Database** → **Upstash for Redis** (Gratis-Plan) → mit dem Projekt verbinden. Dadurch werden `KV_REST_API_URL` und `KV_REST_API_TOKEN` automatisch gesetzt.
+2. **Deployments** → letztes Deployment → **Redeploy**, damit die neuen Variablen aktiv werden.
 
-Alternativen mit dauerhaftem Node-Server: Railway, Fly.io, ein eigener VPS.
+Ohne Datenbank zeigt das Spiel beim Klick auf „Créer une partie“ eine entsprechende Meldung an.
+
+Grobe Kosten: Pro Spieler und Minute fallen etwa 60–70 Redis-Befehle an. Der Upstash-Gratis-Plan reicht damit für Dutzende Partien pro Monat.
+
+Alternativ läuft `npm start` auf jedem Node-Host (Render, Railway …), dann ohne Redis mit Speicher im Arbeitsspeicher.
 
 ## Entwicklung
 
 ```bash
-npm test                     # Spiellogik, Bot-KI und Socket.IO-Multiplayer-Test
+npm test                     # Spiellogik, Bot-KI, Räume und HTTP-API
 END_SCORE=20 npm start       # kürzere Partien zum Testen
 ```
 
@@ -43,7 +47,10 @@ END_SCORE=20 npm start       # kürzere Partien zum Testen
 |---|---|
 | `server/game.js` | Spielregeln (serverseitig, verdeckte Karten verlassen nie den Server) |
 | `server/bot.js` | Roboter-KI und Sprüche |
-| `server/index.js` | Express + Socket.IO, Räume, Reconnect, Autopilot |
+| `server/rooms.js` | Räume, Bots, Reconnect, Autopilot (zustandslos, für Serverless) |
+| `server/store.js` | Speicher: Upstash Redis (Vercel) oder Map (lokal/Tests) |
+| `api/room.js` | Vercel-Funktion `POST /api/room` |
+| `server/index.js` | Lokaler Express-Server mit derselben API |
 | `public/` | Frontend (Vanilla JS, kein Build-Schritt) |
 
 ---

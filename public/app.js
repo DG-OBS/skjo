@@ -1,12 +1,7 @@
 (() => {
   'use strict';
 
-  const OFFLINE = 'Serveur de jeu introuvable 📡 (cet hébergement ne fait pas tourner le serveur Node).';
-  // Sans serveur Socket.IO (ex. hébergement purement statique), on affiche une erreur au lieu de planter.
-  const socket = typeof io === 'function' ? io() : {
-    on() {},
-    emit(event, data, ack) { if (typeof ack === 'function') ack({ error: OFFLINE }); },
-  };
+  const OFFLINE = 'Serveur de jeu introuvable 📡 (l\'API /api/room ne répond pas).';
   const $ = sel => document.querySelector(sel);
   const STORE = 'roboskyjo-session';
 
@@ -188,18 +183,17 @@
 
   function onJoined(res) {
     if (res.error) { toast(`🚫 ${res.error}`, 'bad'); Sound.error(); return; }
-    saveSession({ code: res.code, token: res.token });
     history.replaceState(null, '', `/?room=${res.code}`);
   }
 
-  $('#btn-create').onclick = () => { Sound.unlock(); Sound.click(); socket.emit('create', identity(), onJoined); };
+  $('#btn-create').onclick = () => { Sound.unlock(); Sound.click(); server.emit('create', identity(), onJoined); };
   $('#btn-join').onclick = () => {
     Sound.unlock();
     Sound.click();
     const code = $('#in-code').value.trim().toUpperCase();
     if (code.length !== 4) { toast('Le code fait 4 lettres, pilote ! 🔤', 'bad'); return; }
     const token = session.code === code ? session.token : undefined;
-    socket.emit('join', { ...identity(), code, token }, onJoined);
+    server.emit('join', { ...identity(), code, token }, onJoined);
   };
   $('#in-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 
@@ -213,14 +207,17 @@
   });
   $('#btn-leave').onclick = () => {
     if (!confirm('Quitter la salle ? (Un robot prendra ta place si la partie est en cours)')) return;
-    socket.emit('leave', {}, () => {});
+    server.emit('leave', {}, () => {});
     goHome();
   };
 
   function goHome() {
     saveSession({ code: null, token: null });
+    clearTimeout(pollTimer);
     room = null;
     you = null;
+    lastSeq = null;
+    lastVersion = 0;
     history.replaceState(null, '', '/');
     boardsKey = '';
     hideOverlay();
@@ -234,11 +231,11 @@
     catch (e) { prompt('Copie ce lien :', url); }
   };
   document.querySelectorAll('[data-bot]').forEach(b => {
-    b.onclick = () => { Sound.bip(); socket.emit('addBot', { level: b.dataset.bot }, res => res.error && toast(`🚫 ${res.error}`, 'bad')); };
+    b.onclick = () => { Sound.bip(); server.emit('addBot', { level: b.dataset.bot }, res => res.error && toast(`🚫 ${res.error}`, 'bad')); };
   });
   $('#btn-start').onclick = () => {
     Sound.click();
-    socket.emit('start', {}, res => res.error && toast(`🚫 ${res.error}`, 'bad'));
+    server.emit('start', {}, res => res.error && toast(`🚫 ${res.error}`, 'bad'));
   };
 
   const isHost = () => room && room.hostId === you;
@@ -262,7 +259,7 @@
       if (isHost() && p.id !== you) {
         const k = el('button', 'kick', '❌');
         k.title = 'Retirer';
-        k.onclick = () => socket.emit('kick', { id: p.id }, () => {});
+        k.onclick = () => server.emit('kick', { id: p.id }, () => {});
         li.append(k);
       }
       list.append(li);
@@ -362,7 +359,7 @@
     if (pending) return;
     pending = true;
     Sound.unlock();
-    socket.emit('action', action, res => {
+    server.emit('action', action, res => {
       pending = false;
       if (res && res.error) { toast(`🤖 ${res.error}`, 'bad'); Sound.error(); }
     });
@@ -540,13 +537,13 @@
     if (isHost()) {
       if (over) {
         const again = el('button', 'btn btn-big btn-orange', '🔁 Rejouer !');
-        again.onclick = () => { Sound.click(); socket.emit('start', {}, res => res.error && toast(res.error, 'bad')); };
+        again.onclick = () => { Sound.click(); server.emit('start', {}, res => res.error && toast(res.error, 'bad')); };
         const lobby = el('button', 'btn btn-cyan', '🏠 Retour au salon');
-        lobby.onclick = () => socket.emit('toLobby', {}, () => {});
+        lobby.onclick = () => server.emit('toLobby', {}, () => {});
         actions.append(again, lobby);
       } else {
         const next = el('button', 'btn btn-big btn-orange', '🚀 Manche suivante');
-        next.onclick = () => { Sound.click(); socket.emit('nextRound', {}, res => res.error && toast(res.error, 'bad')); };
+        next.onclick = () => { Sound.click(); server.emit('nextRound', {}, res => res.error && toast(res.error, 'bad')); };
         actions.append(next);
       }
     } else {
@@ -694,39 +691,85 @@
   const EMOTES = ['🤖 Bip boup !', '😂', '😱', '🔥', '👏', '😎', '🥶', 'Trop fort !', 'Noooon !', 'GG 🤝'];
   EMOTES.forEach(t => {
     const b = el('button', '', t);
-    b.onclick = () => socket.emit('emote', { text: t }, () => {});
+    b.onclick = () => server.emit('emote', { text: t }, () => {});
     $('#emotes').append(b);
   });
 
-  // ---------- Socket ----------
-  let wasDisconnected = false;
-  socket.on('connect', () => {
-    if (wasDisconnected) toast('📶 Connexion rétablie !');
-    wasDisconnected = false;
-    if (session.code && session.token) {
-      socket.emit('join', { code: session.code, token: session.token, name: session.name, avatar: session.avatar }, res => {
-        if (res.error) { saveSession({ code: null, token: null }); room = null; render(); }
-      });
-    }
-  });
-  socket.on('disconnect', () => {
-    wasDisconnected = true;
-    toast('📡 Connexion perdue… je réessaie !', 'bad');
-  });
-  socket.on('state', ({ room: r, you: y, events }) => {
+  // ---------- Communication avec le serveur (HTTP + interrogation régulière) ----------
+  // Vercel ne garde pas de connexion ouverte : on demande l'état toutes les secondes,
+  // et le serveur renvoie les événements survenus depuis la dernière fois (lastSeq).
+  let lastSeq = null;
+  let lastVersion = 0;
+  let pollTimer = null;
+  let offline = false;
+
+  function applyState(st) {
+    if (room && st.room.code === room.code && st.version < lastVersion) return; // réponse périmée
+    lastVersion = st.version;
+    const fresh = st.events.filter(e => lastSeq === null || e.seq > lastSeq);
+    lastSeq = Math.max(lastSeq || 0, st.seq);
     const prev = room;
-    room = r;
-    you = y;
+    room = st.room;
+    you = st.you;
     pending = false;
     render(prev);
-    handleEvents(events || []);
-  });
-  socket.on('kicked', () => {
-    toast('🚪 Le chef t\'a retiré de la salle.', 'bad');
-    goHome();
-  });
+    handleEvents(fresh);
+  }
+
+  function schedulePoll() {
+    clearTimeout(pollTimer);
+    if (!session.code || !session.token || !room) return;
+    const delay = document.hidden ? 5000 : room.game ? 900 : 1800;
+    pollTimer = setTimeout(() => server.emit('poll'), delay);
+  }
+
+  async function request(body) {
+    let res;
+    try {
+      const r = await fetch('/api/room', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+      });
+      if (r.status === 404) return { error: OFFLINE };
+      res = await r.json();
+      if (offline) { offline = false; toast('📶 Connexion rétablie !'); }
+    } catch (e) {
+      if (!offline) { offline = true; toast('📡 Connexion perdue… je réessaie !', 'bad'); }
+      return { error: 'Pas de connexion au serveur 📡' };
+    }
+    if (res.gone && room && body.op !== 'join' && body.op !== 'create') {
+      toast('🚪 Tu ne fais plus partie de cette salle.', 'bad');
+      goHome();
+      return res;
+    }
+    if (res.state && body.op !== 'leave') applyState(res.state);
+    return res;
+  }
+
+  const server = {
+    async emit(op, data = {}, ack) {
+      const body = { ...data, op };
+      if (op === 'create' || op === 'join') {
+        lastSeq = null;
+        lastVersion = 0;
+      } else {
+        Object.assign(body, { code: session.code, token: session.token, since: lastSeq });
+      }
+      const res = await request(body);
+      if (res.ok && res.code && res.token) saveSession({ code: res.code, token: res.token });
+      schedulePoll();
+      if (typeof ack === 'function') ack(res);
+      return res;
+    },
+  };
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && room) server.emit('poll'); });
+
+  if (session.code && session.token) {
+    server.emit('join', { code: session.code, token: session.token, name: session.name, avatar: session.avatar }, res => {
+      if (res.error) { saveSession({ code: null, token: null }); room = null; render(); }
+    });
+  }
 
   document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
   render();
-  if (typeof io !== 'function') toast(`🚫 ${OFFLINE}`, 'bad', 8);
 })();

@@ -269,6 +269,17 @@ class Game {
     }
   }
 
+  // ---------- Sauvegarde (le serveur est sans état : la partie vit dans la base) ----------
+
+  toJSON() {
+    const { rng, ...data } = this;
+    return data;
+  }
+
+  static fromJSON(data, { rng = Math.random } = {}) {
+    return Object.assign(Object.create(Game.prototype), data, { rng });
+  }
+
   // ---------- Vue envoyée aux clients (les cartes cachées restent secrètes) ----------
 
   view() {
