@@ -24,8 +24,13 @@ Im gleichen WLAN können andere Geräte über `http://<IP-deines-Rechners>:3000`
 
 ## Online stellen (kostenlos, z. B. Render)
 
+> ⚠️ **Nicht auf Vercel/Netlify/GitHub Pages:** Diese Dienste liefern nur statische Dateien bzw. kurzlebige Funktionen aus. Das Spiel braucht aber einen dauerhaft laufenden Node-Server mit WebSockets (Socket.IO). Dort lädt zwar die Seite, aber „Créer une partie“ meldet *Serveur de jeu introuvable*.
+
 1. Auf [render.com](https://render.com) mit GitHub anmelden → **New → Blueprint** → dieses Repo wählen.
 2. `render.yaml` wird automatisch erkannt. Nach dem Deploy die URL teilen – fertig.
+3. Hinweis: Im Gratis-Plan schläft der Server nach ~15 Min. ohne Besucher ein; der erste Aufruf dauert dann ca. 30–60 s.
+
+Alternativen mit dauerhaftem Node-Server: Railway, Fly.io, ein eigener VPS.
 
 ## Entwicklung
 

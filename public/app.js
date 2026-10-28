@@ -1,7 +1,12 @@
 (() => {
   'use strict';
 
-  const socket = io();
+  const OFFLINE = 'Serveur de jeu introuvable 📡 (cet hébergement ne fait pas tourner le serveur Node).';
+  // Sans serveur Socket.IO (ex. hébergement purement statique), on affiche une erreur au lieu de planter.
+  const socket = typeof io === 'function' ? io() : {
+    on() {},
+    emit(event, data, ack) { if (typeof ack === 'function') ack({ error: OFFLINE }); },
+  };
   const $ = sel => document.querySelector(sel);
   const STORE = 'roboskyjo-session';
 
@@ -723,4 +728,5 @@
 
   document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
   render();
+  if (typeof io !== 'function') toast(`🚫 ${OFFLINE}`, 'bad', 8);
 })();
