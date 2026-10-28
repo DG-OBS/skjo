@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Robo-Skyjo</title>
+  <meta name="description" content="Le Skyjo en multijoueur, version robots !">
+  <meta name="theme-color" content="#0b1020">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-gears" aria-hidden="true"><span>⚙</span><span>⚙</span><span>⚙</span></div>
+
+  <header class="topbar">
+    <div class="logo">ROBO<span>-</span>SKYJO</div>
+    <div class="top-actions">
+      <span id="room-chip" class="chip hidden" title="Code de la salle"></span>
+      <button id="btn-rules" class="icon-btn" title="Règles du jeu">📜</button>
+      <button id="btn-mute" class="icon-btn" title="Son">🔊</button>
+      <button id="btn-leave" class="icon-btn hidden" title="Quitter la salle">🚪</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ACCUEIL -->
+    <section id="screen-home" class="screen">
+      <div class="hero">
+        <div id="mascot" class="mascot"></div>
+        <h1>ROBO-SKYJO</h1>
+        <p class="tagline">Le jeu de cartes où les robots perdent leurs boulons&nbsp;! 🔩</p>
+      </div>
+      <div class="panel">
+        <label class="field">
+          <span>Ton nom de pilote</span>
+          <input id="in-name" maxlength="16" autocomplete="off" placeholder="Ex. : Capitaine Lasers">
+        </label>
+        <div class="field">
+          <span>Choisis ton robot</span>
+          <div id="avatar-picker" class="avatar-picker"></div>
+        </div>
+        <button id="btn-create" class="btn btn-big btn-orange">🚀 Créer une partie</button>
+        <div class="or">— ou —</div>
+        <div class="join-row">
+          <input id="in-code" maxlength="4" autocomplete="off" placeholder="CODE" class="code-input">
+          <button id="btn-join" class="btn btn-cyan">Rejoindre</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SALON -->
+    <section id="screen-lobby" class="screen hidden">
+      <div class="panel lobby">
+        <h2>Salle d'assemblage</h2>
+        <p class="hint">Donne ce code à tes amis pour qu'ils te rejoignent :</p>
+        <div class="code-big" id="lobby-code"></div>
+        <button id="btn-copy" class="btn btn-small">🔗 Copier le lien d'invitation</button>
+        <ul id="lobby-players" class="lobby-players"></ul>
+        <div id="host-tools" class="host-tools">
+          <p class="hint">Pas assez d'humains ? Ajoute des robots&nbsp;:</p>
+          <div class="row">
+            <button class="btn btn-small btn-green" data-bot="facile">🤖 Robot rigolo (facile)</button>
+            <button class="btn btn-small btn-pink" data-bot="malin">🧠 Robot malin (difficile)</button>
+          </div>
+          <button id="btn-start" class="btn btn-big btn-orange">⚡ Lancer la partie !</button>
+        </div>
+        <p id="lobby-wait" class="hint wait hidden">En attente du chef de la salle… <span class="dots"></span></p>
+      </div>
+    </section>
+
+    <!-- PARTIE -->
+    <section id="screen-game" class="screen hidden">
+      <div id="opponents" class="opponents"></div>
+      <div class="table">
+        <div class="pile-wrap">
+          <div id="deck" class="pile"></div>
+          <div class="pile-label">Pioche <b id="deck-count"></b></div>
+        </div>
+        <div class="pile-wrap drawn-wrap">
+          <div id="drawn" class="pile drawn-slot"></div>
+          <div class="pile-label" id="drawn-label">&nbsp;</div>
+        </div>
+        <div class="pile-wrap">
+          <div id="discard" class="pile"></div>
+          <div class="pile-label">Défausse</div>
+        </div>
+      </div>
+      <div id="instruction" class="instruction"></div>
+      <div id="me" class="me"></div>
+      <div class="emotes" id="emotes"></div>
+    </section>
+  </main>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="overlay" class="overlay hidden"></div>
+
+  <div id="rules" class="overlay hidden">
+    <div class="modal rules">
+      <button class="close" data-close>✖</button>
+      <h2>📜 Le manuel du robot</h2>
+      <p><b>But du jeu :</b> avoir le <b>moins de points possible</b>. Quand quelqu'un atteint <b>100 points</b>, la partie s'arrête et le joueur avec le plus petit score gagne. 🏆</p>
+      <h3>🔧 Au début de chaque manche</h3>
+      <p>Tu as 12 cartes cachées (3 lignes × 4 colonnes). Retournes-en <b>2</b>. Celui qui a le plus gros total commence.</p>
+      <h3>🎮 À ton tour</h3>
+      <ul>
+        <li><b>Prends la carte de la défausse</b> et échange-la avec une de tes cartes (cachée ou visible).</li>
+        <li><b>OU pioche une carte</b>. Ensuite, soit tu l'échanges avec une de tes cartes, soit tu la jettes à la défausse et tu <b>retournes une de tes cartes cachées</b>.</li>
+      </ul>
+      <h3>💥 Le combo triple</h3>
+      <p>Si une <b>colonne</b> contient 3 cartes visibles <b>identiques</b>, elle est pulvérisée au laser : ces cartes ne comptent plus !</p>
+      <h3>⏰ Fin de manche</h3>
+      <p>Dès qu'un joueur a retourné toutes ses cartes, chacun des autres joue <b>un dernier tour</b>. On compte ensuite les points.</p>
+      <p>⚠️ Attention : si celui qui a fini en premier n'a <b>pas le plus petit score</b>, ses points sont <b>doublés</b> ! Court-circuit garanti. ⚡</p>
+      <h3>🃏 Les cartes</h3>
+      <p class="legend">
+        <span class="mini" data-tier="neg2">-2</span><span class="mini" data-tier="neg">-1</span><span class="mini" data-tier="zero">0</span>
+        <span class="mini" data-tier="low">1–4</span><span class="mini" data-tier="mid">5–8</span><span class="mini" data-tier="high">9–12</span>
+      </p>
+      <p class="hint">Astuce de robot : les cartes rouges, c'est comme les chaussettes sales. Débarrasse-t'en vite ! 🧦</p>
+    </div>
+  </div>
+
+  <canvas id="confetti" class="confetti"></canvas>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="robots.js"></script>
+  <script src="sounds.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
