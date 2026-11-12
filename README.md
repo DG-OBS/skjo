@@ -1,4 +1,4 @@
-# 🤖 Robo-Skyjo
+# 🤖 SKYJO-Robo
 
 Das Kartenspiel **Skyjo** als Multiplayer-Webapp – komplett auf **Französisch**, mit Roboter-Thema, Humor, Animationen und Soundeffekten. Gedacht für Kinder ab ca. 10 Jahren.
 
