@@ -45,7 +45,7 @@ function gridScore(grid) {
 class Game {
   constructor(playerIds, { rng = Math.random, endScore = DEFAULT_END_SCORE } = {}) {
     if (playerIds.length < 2 || playerIds.length > 8) {
-      throw new GameError('Il faut entre 2 et 8 joueurs.');
+      throw new GameError('Servono da 2 a 8 giocatori.');
     }
     this.rng = rng;
     this.endScore = endScore;
@@ -80,7 +80,7 @@ class Game {
   }
 
   nextRound() {
-    if (this.phase !== 'roundEnd') throw new GameError('La manche n\'est pas terminée.');
+    if (this.phase !== 'roundEnd') throw new GameError('Il round non è finito.');
     return this.startRound();
   }
 
@@ -93,28 +93,28 @@ class Game {
       case 'swap': return this.swap(playerId, cell);
       case 'discard': return this.discardDrawn(playerId);
       case 'flip': return this.flip(playerId, cell);
-      default: throw new GameError('Action inconnue.');
+      default: throw new GameError('Azione sconosciuta.');
     }
   }
 
   indexOf(playerId) {
     const i = this.players.findIndex(p => p.id === playerId);
-    if (i < 0) throw new GameError('Joueur inconnu.');
+    if (i < 0) throw new GameError('Giocatore sconosciuto.');
     return i;
   }
 
   checkCell(p, cell) {
-    if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS) throw new GameError('Carte invalide.');
-    if (p.grid[cell].removed) throw new GameError('Cette carte a été pulvérisée !');
+    if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS) throw new GameError('Carta non valida.');
+    if (p.grid[cell].removed) throw new GameError('Questa carta è stata polverizzata!');
     return p.grid[cell];
   }
 
   initialReveal(playerId, cell) {
-    if (this.phase !== 'reveal') throw new GameError('Ce n\'est pas le moment de retourner des cartes.');
+    if (this.phase !== 'reveal') throw new GameError('Non è il momento di girare le carte.');
     const p = this.players[this.indexOf(playerId)];
-    if (p.revealsLeft <= 0) throw new GameError('Tu as déjà retourné tes 2 cartes.');
+    if (p.revealsLeft <= 0) throw new GameError('Hai già girato le tue 2 carte.');
     const c = this.checkCell(p, cell);
-    if (c.revealed) throw new GameError('Cette carte est déjà retournée.');
+    if (c.revealed) throw new GameError('Questa carta è già girata.');
     c.revealed = true;
     p.revealsLeft--;
     const events = [{ type: 'flip', player: playerId, cell, value: c.value }];
@@ -139,9 +139,9 @@ class Game {
   }
 
   assertTurn(playerId, ...steps) {
-    if (this.phase !== 'playing') throw new GameError('La partie n\'est pas en cours.');
-    if (this.players[this.current].id !== playerId) throw new GameError('Patience, ce n\'est pas ton tour !');
-    if (!steps.includes(this.step)) throw new GameError('Action impossible maintenant.');
+    if (this.phase !== 'playing') throw new GameError('La partita non è in corso.');
+    if (this.players[this.current].id !== playerId) throw new GameError('Pazienza, non è il tuo turno!');
+    if (!steps.includes(this.step)) throw new GameError('Azione impossibile adesso.');
     return this.players[this.current];
   }
 
@@ -150,7 +150,7 @@ class Game {
     const top = this.discard.pop();
     this.deck = shuffle(this.discard, this.rng);
     this.discard = top === undefined ? [] : [top];
-    if (this.deck.length === 0) throw new GameError('Plus aucune carte disponible.');
+    if (this.deck.length === 0) throw new GameError('Nessuna carta disponibile.');
     events.push({ type: 'reshuffle' });
   }
 
@@ -167,7 +167,7 @@ class Game {
 
   takeDiscard(playerId) {
     this.assertTurn(playerId, 'draw');
-    if (this.discard.length === 0) throw new GameError('La défausse est vide.');
+    if (this.discard.length === 0) throw new GameError('Gli scarti sono vuoti.');
     this.drawn = this.discard.pop();
     this.drawnFrom = 'discard';
     this.step = 'place';
@@ -200,7 +200,7 @@ class Game {
   flip(playerId, cell) {
     const p = this.assertTurn(playerId, 'flip');
     const c = this.checkCell(p, cell);
-    if (c.revealed) throw new GameError('Choisis une carte encore cachée.');
+    if (c.revealed) throw new GameError('Scegli una carta ancora coperta.');
     c.revealed = true;
     const events = [{ type: 'flip', player: playerId, cell, value: c.value }];
     this.afterAction(events);

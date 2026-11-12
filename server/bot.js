@@ -118,38 +118,38 @@ function botAction(game, playerId, level = 'malin', rng = Math.random) {
 
 const LINES = {
   roundStart: [
-    'Bip boup ! Mes circuits sont chauds !',
-    'Initialisation du mode champion... 87 %...',
-    'J\'ai mangé une batterie ce matin, je suis en forme !',
-    'Attention, je joue en 4K Ultra HD.',
+    'Bip bup! I miei circuiti sono caldi!',
+    'Inizializzazione modalità campione... 87%...',
+    'Stamattina ho mangiato una batteria, sono in forma!',
+    'Attenzione, gioco in 4K Ultra HD.',
   ],
   column: [
-    'TRIPLE ! Mes lasers sont réglés au millimètre !',
-    'Colonne pulvérisée ! Bzzzzt !',
-    'Calcul parfait. Comme d\'habitude. 😎',
+    'TRIPLO! I miei laser sono regolati al millimetro!',
+    'Colonna polverizzata! Bzzzzt!',
+    'Calcolo perfetto. Come al solito. 😎',
   ],
   badCard: [
-    'Erreur 404 : bonne carte introuvable.',
-    'Aïe aïe aïe, ça grince dans mes engrenages...',
-    'Je crois que j\'ai un boulon desserré.',
-    'Qui a mis du jus d\'orange dans ma carte mère ?',
+    'Errore 404: carta buona non trovata.',
+    'Ahi ahi ahi, scricchiolano i miei ingranaggi...',
+    'Credo di avere un bullone allentato.',
+    'Chi ha messo il succo d\'arancia nella mia scheda madre?',
   ],
   goodCard: [
-    'Hé hé hé... *bruit de robot content*',
-    'Excellente pioche, merci le Wi-Fi !',
-    'Mes capteurs détectent une victoire imminente.',
+    'Eh eh eh... *rumore di robot contento*',
+    'Ottima pescata, grazie Wi-Fi!',
+    'I miei sensori rilevano una vittoria imminente.',
   ],
   finisher: [
-    'J\'AI TOUT RETOURNÉ ! Dernier tour, les humains !',
-    'Mode turbo activé ! Plus de cartes cachées !',
+    'HO GIRATO TUTTO! Ultimo giro, umani!',
+    'Modalità turbo attivata! Niente più carte coperte!',
   ],
   win: [
-    'VICTOIRE ! Je vais fêter ça avec un bain d\'huile.',
-    'Les robots dominent le monde... du Skyjo !',
+    'VITTORIA! Festeggio con un bagno d\'olio.',
+    'I robot dominano il mondo... dello Skyjo!',
   ],
   lose: [
-    'Je demande une mise à jour logicielle...',
-    'Ce n\'est pas juste, j\'avais du lag !',
+    'Chiedo un aggiornamento software...',
+    'Non è giusto, avevo il lag!',
   ],
 };
 

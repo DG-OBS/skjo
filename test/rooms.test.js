@@ -19,15 +19,15 @@ test('créer, rejoindre, ajouter un robot et lancer une partie', async () => {
   const { rooms } = setup();
   const a = await rooms.handle({ op: 'create', name: 'Alice', avatar: 1 });
   assert.ok(a.ok && a.code.length === 4);
-  assert.match((await rooms.handle({ op: 'join', code: 'ZZZZ', name: 'Bob' })).error, /Aucune salle/);
+  assert.match((await rooms.handle({ op: 'join', code: 'ZZZZ', name: 'Bob' })).error, /Nessuna sala/);
   const b = await rooms.handle({ op: 'join', code: a.code, name: 'Bob' });
   assert.ok(b.ok);
-  assert.match((await rooms.handle({ op: 'addBot', code: a.code, token: b.token })).error, /chef/);
+  assert.match((await rooms.handle({ op: 'addBot', code: a.code, token: b.token })).error, /capo/);
   assert.ok((await rooms.handle({ op: 'addBot', code: a.code, token: a.token, level: 'malin' })).ok);
   const started = await rooms.handle({ op: 'start', code: a.code, token: a.token });
   assert.equal(started.state.room.game.phase, 'reveal');
   assert.equal(started.state.room.players.length, 3);
-  assert.match((await rooms.handle({ op: 'join', code: a.code, name: 'Carl' })).error, /déjà commencé/);
+  assert.match((await rooms.handle({ op: 'join', code: a.code, name: 'Carl' })).error, /già iniziata/);
 });
 
 test('les cartes cachées ne sont jamais envoyées au client', async () => {
@@ -135,7 +135,7 @@ test('API HTTP locale : POST /api/room', async () => {
     const a = await post({ op: 'create', name: 'Léo', avatar: 3 });
     assert.ok(a.ok);
     assert.equal(a.state.room.players[0].name, 'Léo');
-    assert.match((await post({ op: 'pirate' })).error, /inconnue/);
+    assert.match((await post({ op: 'pirate' })).error, /sconosciuta/);
   } finally {
     server.close();
   }

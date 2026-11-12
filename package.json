@@ -1,7 +1,7 @@
 {
   "name": "robo-skyjo",
   "version": "1.0.0",
-  "description": "SKYJO-Robo : le jeu de cartes Skyjo en multijoueur, version robots (en français)",
+  "description": "SKYJO-Robo: il gioco di carte Skyjo multigiocatore, versione robot (in italiano)",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

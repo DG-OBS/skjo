@@ -22,7 +22,7 @@ function createApp({ store = createStore(), endScore = Number(process.env.END_SC
 }
 
 if (require.main === module) {
-  createApp().listen(PORT, () => console.log(`🤖 SKYJO-Robo prêt sur http://localhost:${PORT}`));
+  createApp().listen(PORT, () => console.log(`🤖 SKYJO-Robo pronto su http://localhost:${PORT}`));
 }
 
 module.exports = { createApp };

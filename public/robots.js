@@ -1,7 +1,7 @@
 // Générateur de robots en SVG : 10 modèles, tous plus beaux les uns que les autres.
 const Robots = (() => {
   const COLORS = ['#4fd1ff', '#ff7a45', '#a3e635', '#f472b6', '#facc15', '#a78bfa', '#34d399', '#f87171', '#60a5fa', '#fb923c'];
-  const NAMES = ['Boulon', 'Clank', 'Turbo-Grille-Pain', 'Bip-Bip', 'Écrou-Man', 'Rouillette', 'Chaussette-Tron', 'Vis-Sans-Fin', 'Pixel', 'Giga-Watt'];
+  const NAMES = ['Bullone', 'Clank', 'Turbo-Tostapane', 'Bip-Bip', 'Dado-Man', 'Ruggine', 'Calzino-Tron', 'Vite-Senza-Fine', 'Pixel', 'Giga-Watt'];
   const DESIGNS = [
     { head: 0, eyes: 0, ant: 0, mouth: 0 },
     { head: 1, eyes: 1, ant: 1, mouth: 1 },

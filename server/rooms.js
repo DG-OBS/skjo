@@ -14,8 +14,8 @@ const BOT_DELAY_REVEAL = 350;
 const BOT_DELAY_PLAY = 1100;
 
 const BOT_NAMES = [
-  'Boulon', 'Clank', 'Turbo-Grille-Pain', 'Bip-Bip', 'Écrou-Man',
-  'Rouillette', 'Chaussette-Tron', 'Vis-Sans-Fin', 'Pixel', 'Giga-Watt',
+  'Bullone', 'Clank', 'Turbo-Tostapane', 'Bip-Bip', 'Dado-Man',
+  'Ruggine', 'Calzino-Tron', 'Vite-Senza-Fine', 'Pixel', 'Giga-Watt',
 ];
 
 // ---------- Utilitaires ----------
@@ -27,7 +27,7 @@ function makeCode() {
 
 function cleanName(name) {
   const n = String(name || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 16);
-  return n || 'Robot mystère';
+  return n || 'Robot misterioso';
 }
 
 function cleanAvatar(a) {
@@ -154,14 +154,14 @@ function view(room, me, since, now) {
 // ---------- Opérations ----------
 
 function requireHost(room, me) {
-  if (room.hostId !== me.id) throw new GameError('Seul le chef de la salle peut faire ça.');
+  if (room.hostId !== me.id) throw new GameError('Solo il capo della sala può farlo.');
 }
 
 const OPS = {
   addBot(room, me, data) {
     requireHost(room, me);
-    if (room.game) throw new GameError('Impossible pendant une partie.');
-    if (room.players.length >= MAX_PLAYERS) throw new GameError('La salle est pleine (8 joueurs max).');
+    if (room.game) throw new GameError('Impossibile durante una partita.');
+    if (room.players.length >= MAX_PLAYERS) throw new GameError('La sala è piena (massimo 8 giocatori).');
     const usedNames = new Set(room.players.map(p => p.name));
     const usedAvatars = new Set(room.players.map(p => p.avatar));
     const named = BOT_NAMES.map((n, i) => ({ n, i })).filter(b => !usedNames.has(b.n));
@@ -173,13 +173,13 @@ const OPS = {
       level: data.level === 'facile' ? 'facile' : 'malin', autopilot: false,
     };
     room.players.push(bot);
-    pushEvents(room, [{ type: 'joined', player: bot.id }, { type: 'chat', player: bot.id, text: 'Bip boup ! Prêt à jouer !' }]);
+    pushEvents(room, [{ type: 'joined', player: bot.id }, { type: 'chat', player: bot.id, text: 'Bip bup! Pronto a giocare!' }]);
   },
 
   kick(room, me, data) {
     requireHost(room, me);
-    if (room.game) throw new GameError('Impossible pendant une partie.');
-    if (data.id === me.id) throw new GameError('Tu ne peux pas te retirer toi-même.');
+    if (room.game) throw new GameError('Impossibile durante una partita.');
+    if (data.id === me.id) throw new GameError('Non puoi rimuovere te stesso.');
     const target = room.players.find(p => p.id === data.id);
     if (!target) return;
     room.players = room.players.filter(p => p !== target);
@@ -189,8 +189,8 @@ const OPS = {
   start(room, me, data, now) {
     requireHost(room, me);
     const current = loadGame(room);
-    if (current && current.phase !== 'gameOver') throw new GameError('La partie est déjà en cours.');
-    if (room.players.length < 2) throw new GameError('Il faut au moins 2 joueurs. Ajoute un robot !');
+    if (current && current.phase !== 'gameOver') throw new GameError('La partita è già in corso.');
+    if (room.players.length < 2) throw new GameError('Servono almeno 2 giocatori. Aggiungi un robot!');
     const game = new Game(room.players.map(p => p.id), { endScore: room.endScore });
     room.game = game.toJSON();
     room.lastActionAt = now;
@@ -199,7 +199,7 @@ const OPS = {
 
   action(room, me, data, now) {
     const game = loadGame(room);
-    if (!game) throw new GameError('Aucune partie en cours.');
+    if (!game) throw new GameError('Nessuna partita in corso.');
     const action = { type: String(data.type || ''), cell: data.cell === undefined ? undefined : Number(data.cell) };
     play(room, game, me.id, action, now);
   },
@@ -207,7 +207,7 @@ const OPS = {
   nextRound(room, me, data, now) {
     requireHost(room, me);
     const game = loadGame(room);
-    if (!game) throw new GameError('Aucune partie en cours.');
+    if (!game) throw new GameError('Nessuna partita in corso.');
     const events = game.nextRound();
     room.game = game.toJSON();
     room.lastActionAt = now;
@@ -249,7 +249,7 @@ function createRooms(store, { endScore = 100, now = () => Date.now() } = {}) {
   async function mutate(code, fn) {
     for (let attempt = 0; attempt < 8; attempt++) {
       const room = await store.get(code);
-      if (!room) throw new GameError('Aucune salle avec ce code. Vérifie les lettres !', { cause: 'gone' });
+      if (!room) throw new GameError('Nessuna sala con questo codice. Controlla le lettere!', { cause: 'gone' });
       const prev = room.version;
       const result = fn(room);
       if (!result || !result.changed) return { room, result };
@@ -257,12 +257,12 @@ function createRooms(store, { endScore = 100, now = () => Date.now() } = {}) {
       if (await store.cas(code, prev, room)) return { room, result };
       await new Promise(r => setTimeout(r, 15 + Math.random() * 40));
     }
-    throw new GameError('Trop de robots parlent en même temps… réessaie !');
+    throw new GameError('Troppi robot parlano insieme… riprova!');
   }
 
   function findMe(room, token) {
     const me = token && room.players.find(p => p.token === token);
-    if (!me) throw new GameError('Tu ne fais plus partie de cette salle.', { cause: 'gone' });
+    if (!me) throw new GameError('Non fai più parte di questa sala.', { cause: 'gone' });
     return me;
   }
 
@@ -279,7 +279,7 @@ function createRooms(store, { endScore = 100, now = () => Date.now() } = {}) {
         return { ok: true, code: room.code, token: me.token, playerId: me.id, state: view(room, me, room.seq, t) };
       }
     }
-    throw new GameError('Impossible de créer une salle, réessaie !');
+    throw new GameError('Impossibile creare una sala, riprova!');
   }
 
   async function join(data) {
@@ -297,8 +297,8 @@ function createRooms(store, { endScore = 100, now = () => Date.now() } = {}) {
         ensureHost(r, t);
         return { changed: true };
       }
-      if (r.game) throw new GameError('La partie a déjà commencé. Attends la prochaine !');
-      if (r.players.length >= MAX_PLAYERS) throw new GameError('La salle est pleine (8 joueurs max).');
+      if (r.game) throw new GameError('La partita è già iniziata. Aspetta la prossima!');
+      if (r.players.length >= MAX_PLAYERS) throw new GameError('La sala è piena (massimo 8 giocatori).');
       me = newHuman(data, t);
       r.players.push(me);
       pushEvents(r, [{ type: 'joined', player: me.id }]);
@@ -339,11 +339,11 @@ function createRooms(store, { endScore = 100, now = () => Date.now() } = {}) {
       if (name === 'create') return await create(data);
       if (name === 'join') return await join(data);
       if (name === 'poll' || Object.prototype.hasOwnProperty.call(OPS, name)) return await op(name, data);
-      throw new GameError('Opération inconnue.');
+      throw new GameError('Operazione sconosciuta.');
     } catch (err) {
       if (!(err instanceof GameError)) {
         console.error(err);
-        return { error: 'Oups, un court-circuit côté serveur !' };
+        return { error: 'Ops, un cortocircuito sul server!' };
       }
       return { error: err.message, gone: err.cause === 'gone' || undefined };
     }
