@@ -150,7 +150,16 @@
 
   // ---------- Accueil ----------
   $('#mascot').innerHTML = Robots.svg(0);
-  $('#in-name').value = session.name || '';
+  const DEFAULT_NAME = 'Dominik';
+  $('#in-name').value = session.name || DEFAULT_NAME;
+  // Prénom du joueur local, pour lui parler directement.
+  function myName() { return (session.name || $('#in-name').value.trim() || DEFAULT_NAME); }
+  function renderGreeting() {
+    const n = $('#in-name').value.trim();
+    $('#greeting').textContent = n ? `Salut ${n} ! 👋 Prêt à faire griller des circuits ?` : 'Salut, pilote ! 👋';
+  }
+  $('#in-name').addEventListener('input', renderGreeting);
+  renderGreeting();
   const params = new URLSearchParams(location.search);
   if (params.get('room')) $('#in-code').value = params.get('room').toUpperCase();
 
@@ -433,7 +442,7 @@
     if (g.phase === 'reveal') {
       if (me.revealsLeft > 0) {
         mine = true;
-        text = `🔧 Retourne ${me.revealsLeft} carte${me.revealsLeft > 1 ? 's' : ''} pour démarrer tes moteurs !`;
+        text = `🔧 ${myName()}, retourne ${me.revealsLeft} carte${me.revealsLeft > 1 ? 's' : ''} pour démarrer tes moteurs !`;
       } else {
         text = 'Les autres chauffent leurs moteurs… ⏳';
       }
@@ -441,7 +450,7 @@
       if (g.current === you) {
         mine = true;
         text = {
-          draw: '🎯 À toi ! Clique sur la pioche… ou prends la carte de la défausse.',
+          draw: `🎯 À toi, ${myName()} ! Clique sur la pioche… ou prends la carte de la défausse.`,
           decide: '🤔 Clique sur une de tes cartes pour l\'échanger… ou jette-la dans la défausse 🗑️',
           place: '🔁 Choisis la carte à remplacer.',
           flip: '👆 Retourne une de tes cartes cachées.',
@@ -503,10 +512,10 @@
       win.append(av.firstChild);
       modal.append(win);
       const names = g.winners.map(nameOf).join(' & ');
-      modal.append(el('h2', '', g.winners.includes(you) ? '🏆 TU AS GAGNÉ !!!' : `🏆 ${names} gagne !`));
+      modal.append(el('h2', '', g.winners.includes(you) ? `🏆 BRAVO ${myName().toUpperCase()}, TU AS GAGNÉ !!!` : `🏆 ${names} gagne !`));
       modal.append(el('p', 'funny', g.winners.includes(you)
-        ? 'Les robots du monde entier s\'inclinent devant toi. Bip boup respect. 🙇'
-        : pick(['Pas grave, même les robots ont des bugs. Revanche ? 🔧', 'Défaite détectée… mise à jour du cerveau en cours… 🧠', 'Tu as perdu… mais avec style ! 😎'])));
+        ? `Les robots du monde entier s'inclinent devant toi, ${myName()}. Bip boup respect. 🙇`
+        : pick(['Pas grave, même les robots ont des bugs. Revanche ? 🔧', 'Défaite détectée… mise à jour du cerveau en cours… 🧠', `Tu as perdu, ${myName()}… mais avec style ! 😎`])));
     } else {
       modal.append(el('h2', '', `Fin de la manche ${g.round} !`));
       const best = [...g.players].sort((a, b) => a.lastRoundScore - b.lastRoundScore)[0];
@@ -662,12 +671,13 @@
           break;
         case 'finisher':
           Sound.alarm();
-          toast(e.player === you ? '⏰ Tu as tout retourné ! Les autres jouent un dernier tour…' : `⏰ ${who} a tout retourné ! DERNIER TOUR !`, 'hot', 3.5);
+          toast(e.player === you ? `⏰ ${myName()}, tu as tout retourné ! Les autres jouent un dernier tour…` : `⏰ ${who} a tout retourné ! DERNIER TOUR !`, 'hot', 3.5);
           break;
         case 'turn':
           if (e.player === you) {
             Sound.ding();
-            if (e.lastTurn) toast('⏰ C\'est ton DERNIER tour, fais-le compter !', 'hot');
+            if (!e.lastTurn) toast(`🎯 À toi de jouer, ${myName()} !`);
+            if (e.lastTurn) toast(`⏰ ${myName()}, c'est ton DERNIER tour, fais-le compter !`, 'hot');
           }
           break;
         case 'reshuffle': toast('♻️ Pioche vide ! On recycle la défausse…'); break;
