@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const OFFLINE = 'Serveur de jeu introuvable 📡 (l\'API /api/room ne répond pas).';
+  const OFFLINE = 'Server di gioco non trovato 📡 (l\'API /api/room non risponde).';
   const $ = sel => document.querySelector(sel);
   const STORE = 'roboskyjo-session';
 
@@ -150,7 +150,16 @@
 
   // ---------- Accueil ----------
   $('#mascot').innerHTML = Robots.svg(0);
-  $('#in-name').value = session.name || '';
+  const DEFAULT_NAME = 'Dominik';
+  $('#in-name').value = session.name || DEFAULT_NAME;
+  // Prénom du joueur local, pour lui parler directement.
+  function myName() { return (session.name || $('#in-name').value.trim() || DEFAULT_NAME); }
+  function renderGreeting() {
+    const n = $('#in-name').value.trim();
+    $('#greeting').textContent = n ? `Ciao ${n}! 👋 Pronto a friggere qualche circuito?` : 'Ciao, pilota! 👋';
+  }
+  $('#in-name').addEventListener('input', renderGreeting);
+  renderGreeting();
   const params = new URLSearchParams(location.search);
   if (params.get('room')) $('#in-code').value = params.get('room').toUpperCase();
 
@@ -173,7 +182,7 @@
   renderAvatarPicker();
   $('#mascot').innerHTML = Robots.svg(selectedAvatar);
 
-  const FUNNY_NAMES = ['Capitaine Boulon', 'Super Tournevis', 'Pilote Turbo', 'Agent Wi-Fi', 'Ninja Laser', 'Docteur Rouage'];
+  const FUNNY_NAMES = ['Capitan Bullone', 'Super Cacciavite', 'Pilota Turbo', 'Agente Wi-Fi', 'Ninja Laser', 'Dottor Ingranaggio'];
   function identity() {
     let name = $('#in-name').value.trim();
     if (!name) { name = pick(FUNNY_NAMES); $('#in-name').value = name; }
@@ -191,7 +200,7 @@
     Sound.unlock();
     Sound.click();
     const code = $('#in-code').value.trim().toUpperCase();
-    if (code.length !== 4) { toast('Le code fait 4 lettres, pilote ! 🔤', 'bad'); return; }
+    if (code.length !== 4) { toast('Il codice ha 4 lettere, pilota! 🔤', 'bad'); return; }
     const token = session.code === code ? session.token : undefined;
     server.emit('join', { ...identity(), code, token }, onJoined);
   };
@@ -206,7 +215,7 @@
     if (e.target.id === 'rules' || e.target.closest('[data-close]')) $('#rules').classList.add('hidden');
   });
   $('#btn-leave').onclick = () => {
-    if (!confirm('Quitter la salle ? (Un robot prendra ta place si la partie est en cours)')) return;
+    if (!confirm('Lasciare la sala? (Un robot prenderà il tuo posto se la partita è in corso)')) return;
     server.emit('leave', {}, () => {});
     goHome();
   };
@@ -227,8 +236,8 @@
   // ---------- Salon ----------
   $('#btn-copy').onclick = async () => {
     const url = `${location.origin}/?room=${room.code}`;
-    try { await navigator.clipboard.writeText(url); toast('🔗 Lien copié ! Envoie-le à tes amis.'); }
-    catch (e) { prompt('Copie ce lien :', url); }
+    try { await navigator.clipboard.writeText(url); toast('🔗 Link copiato! Mandalo ai tuoi amici.'); }
+    catch (e) { prompt('Copia questo link:', url); }
   };
   document.querySelectorAll('[data-bot]').forEach(b => {
     b.onclick = () => { Sound.bip(); server.emit('addBot', { level: b.dataset.bot }, res => res.error && toast(`🚫 ${res.error}`, 'bad')); };
@@ -250,15 +259,15 @@
       const li = el('li', p.connected ? '' : 'offline');
       const av = el('div');
       av.innerHTML = Robots.svg(p.avatar);
-      const nm = el('div', 'pname', p.name + (p.id === you ? ' (toi)' : ''));
-      let tag = p.isBot ? (p.level === 'facile' ? 'Robot rigolo 🤪' : 'Robot malin 🧠') : 'Humain (enfin, on croit) 🧑';
-      if (p.id === room.hostId) tag = `👑 Chef de la salle · ${tag}`;
-      if (!p.connected) tag += ' · 📡 hors ligne';
+      const nm = el('div', 'pname', p.name + (p.id === you ? ' (tu)' : ''));
+      let tag = p.isBot ? (p.level === 'facile' ? 'Robot burlone 🤪' : 'Robot furbo 🧠') : 'Umano (o almeno crediamo) 🧑';
+      if (p.id === room.hostId) tag = `👑 Capo della sala · ${tag}`;
+      if (!p.connected) tag += ' · 📡 offline';
       nm.append(el('span', 'tag', tag));
       li.append(av.firstChild, nm);
       if (isHost() && p.id !== you) {
         const k = el('button', 'kick', '❌');
-        k.title = 'Retirer';
+        k.title = 'Rimuovi';
         k.onclick = () => server.emit('kick', { id: p.id }, () => {});
         li.append(k);
       }
@@ -267,7 +276,7 @@
     $('#host-tools').classList.toggle('hidden', !isHost());
     $('#lobby-wait').classList.toggle('hidden', isHost());
     $('#btn-start').disabled = room.players.length < 2;
-    $('#btn-start').textContent = room.players.length < 2 ? '⚡ Ajoute au moins 1 adversaire' : `⚡ Lancer la partie ! (${room.players.length} joueurs)`;
+    $('#btn-start').textContent = room.players.length < 2 ? '⚡ Aggiungi almeno 1 avversario' : `⚡ Inizia la partita! (${room.players.length} giocatori)`;
     document.querySelectorAll('[data-bot]').forEach(b => { b.disabled = room.players.length >= 8; });
   }
 
@@ -412,7 +421,7 @@
       drawnCard.style.visibility = '';
       drawnCard.classList.add('revealed');
       if (!prevGame || prevGame.drawn === null) restartAnim(drawnCard, 'pop');
-      const who = g.current === you ? 'Ta carte !' : `Carte de ${nameOf(g.current)}`;
+      const who = g.current === you ? 'La tua carta!' : `Carta di ${nameOf(g.current)}`;
       $('#drawn-label').textContent = who;
     } else {
       drawnCard.style.visibility = 'hidden';
@@ -433,29 +442,29 @@
     if (g.phase === 'reveal') {
       if (me.revealsLeft > 0) {
         mine = true;
-        text = `🔧 Retourne ${me.revealsLeft} carte${me.revealsLeft > 1 ? 's' : ''} pour démarrer tes moteurs !`;
+        text = `🔧 ${myName()}, gira ${me.revealsLeft} cart${me.revealsLeft > 1 ? 'e' : 'a'} per accendere i motori!`;
       } else {
-        text = 'Les autres chauffent leurs moteurs… ⏳';
+        text = 'Gli altri scaldano i motori… ⏳';
       }
     } else if (g.phase === 'playing') {
       if (g.current === you) {
         mine = true;
         text = {
-          draw: '🎯 À toi ! Clique sur la pioche… ou prends la carte de la défausse.',
-          decide: '🤔 Clique sur une de tes cartes pour l\'échanger… ou jette-la dans la défausse 🗑️',
-          place: '🔁 Choisis la carte à remplacer.',
-          flip: '👆 Retourne une de tes cartes cachées.',
+          draw: `🎯 Tocca a te, ${myName()}! Clicca sul mazzo… o prendi la carta dagli scarti.`,
+          decide: '🤔 Clicca su una delle tue carte per scambiarla… o buttala negli scarti 🗑️',
+          place: '🔁 Scegli la carta da sostituire.',
+          flip: '👆 Gira una delle tue carte coperte.',
         }[g.step];
       } else {
         const cur = roomPlayer(g.current);
-        text = cur && (cur.isBot || cur.autopilot) ? `${cur.name} calcule à 3 GHz… 🧠⚙️` : `${nameOf(g.current)} réfléchit… 🤔`;
+        text = cur && (cur.isBot || cur.autopilot) ? `${cur.name} calcola a 3 GHz… 🧠⚙️` : `${nameOf(g.current)} sta pensando… 🤔`;
       }
     } else {
-      text = 'Fin de la manche ! Le robot-comptable calcule… 🧮';
+      text = 'Fine del round! Il robot-contabile sta calcolando… 🧮';
     }
     box.textContent = text;
     box.classList.toggle('mine', mine);
-    if (g.phase === 'playing' && g.finisher !== null) box.append(el('span', 'last', '  ⏰ DERNIER TOUR !'));
+    if (g.phase === 'playing' && g.finisher !== null) box.append(el('span', 'last', '  ⏰ ULTIMO GIRO!'));
   }
 
   // ---------- Fin de manche / fin de partie ----------
@@ -503,16 +512,16 @@
       win.append(av.firstChild);
       modal.append(win);
       const names = g.winners.map(nameOf).join(' & ');
-      modal.append(el('h2', '', g.winners.includes(you) ? '🏆 TU AS GAGNÉ !!!' : `🏆 ${names} gagne !`));
+      modal.append(el('h2', '', g.winners.includes(you) ? `🏆 BRAVO ${myName().toUpperCase()}, HAI VINTO!!!` : `🏆 Vince ${names}!`));
       modal.append(el('p', 'funny', g.winners.includes(you)
-        ? 'Les robots du monde entier s\'inclinent devant toi. Bip boup respect. 🙇'
-        : pick(['Pas grave, même les robots ont des bugs. Revanche ? 🔧', 'Défaite détectée… mise à jour du cerveau en cours… 🧠', 'Tu as perdu… mais avec style ! 😎'])));
+        ? `I robot di tutto il mondo si inchinano davanti a te, ${myName()}. Bip bup rispetto. 🙇`
+        : pick(['Non importa, anche i robot hanno dei bug. Rivincita? 🔧', 'Sconfitta rilevata… aggiornamento del cervello in corso… 🧠', `Hai perso, ${myName()}… ma con stile! 😎`])));
     } else {
-      modal.append(el('h2', '', `Fin de la manche ${g.round} !`));
+      modal.append(el('h2', '', `Fine del round ${g.round}!`));
       const best = [...g.players].sort((a, b) => a.lastRoundScore - b.lastRoundScore)[0];
       const doubled = g.players.find(p => p.doubled);
-      let line = `${nameOf(best.id)} est le roi des boulons de cette manche ! 👑`;
-      if (doubled) line += ` Et ${nameOf(doubled.id)} a fini trop vite… points DOUBLÉS ! ⚡🤖💥`;
+      let line = `${nameOf(best.id)} è il re dei bulloni di questo round! 👑`;
+      if (doubled) line += ` E ${nameOf(doubled.id)} ha finito troppo presto… punti RADDOPPIATI! ⚡🤖💥`;
       modal.append(el('p', 'funny', line));
     }
 
@@ -525,9 +534,9 @@
       const tdAv = el('td');
       tdAv.innerHTML = Robots.svg(p.avatar);
       const tdName = el('td');
-      tdName.append(el('div', '', `${['🥇', '🥈', '🥉'][rank] || '🔩'} ${p.name}${gp.id === you ? ' (toi)' : ''}`));
+      tdName.append(el('div', '', `${['🥇', '🥈', '🥉'][rank] || '🔩'} ${p.name}${gp.id === you ? ' (tu)' : ''}`));
       const sign = gp.lastRoundScore > 0 ? '+' : '';
-      tdName.append(el('div', 'sub', `Cette manche : ${sign}${gp.lastRoundScore}`));
+      tdName.append(el('div', 'sub', `Questo round: ${sign}${gp.lastRoundScore}`));
       const bar = el('div', 'bar');
       const fill = el('i');
       bar.append(fill);
@@ -539,27 +548,27 @@
       table.append(tr);
     });
     modal.append(table);
-    modal.append(el('p', 'sub hint', `La partie s'arrête quand quelqu'un atteint ${g.endScore} points. Le plus petit score gagne !`));
+    modal.append(el('p', 'sub hint', `La partita finisce quando qualcuno arriva a ${g.endScore} punti. Vince il punteggio più basso!`));
 
     const actions = el('div', 'actions');
     if (isHost()) {
       if (over) {
-        const again = el('button', 'btn btn-big btn-orange', '🔁 Rejouer !');
+        const again = el('button', 'btn btn-big btn-orange', '🔁 Gioca ancora!');
         again.onclick = () => { Sound.click(); server.emit('start', {}, res => res.error && toast(res.error, 'bad')); };
-        const lobby = el('button', 'btn btn-cyan', '🏠 Retour au salon');
+        const lobby = el('button', 'btn btn-cyan', '🏠 Torna alla sala');
         lobby.onclick = () => server.emit('toLobby', {}, () => {});
         actions.append(again, lobby);
       } else {
-        const next = el('button', 'btn btn-big btn-orange', '🚀 Manche suivante');
+        const next = el('button', 'btn btn-big btn-orange', '🚀 Prossimo round');
         next.onclick = () => { Sound.click(); server.emit('nextRound', {}, res => res.error && toast(res.error, 'bad')); };
         actions.append(next);
       }
     } else {
-      const w = el('p', 'hint wait', 'En attente du chef de la salle ');
+      const w = el('p', 'hint wait', 'In attesa del capo della sala ');
       w.append(el('span', 'dots'));
       actions.append(w);
     }
-    const look = el('button', 'btn btn-small', '👀 Voir les cartes');
+    const look = el('button', 'btn btn-small', '👀 Guarda le carte');
     look.onclick = () => { ov.classList.add('hidden'); setTimeout(() => { if (overlayKey) showOverlay(false); }, 5000); };
     actions.append(look);
     modal.append(actions);
@@ -604,10 +613,10 @@
     const human = roomPlayer(playerId) && !roomPlayer(playerId).isBot;
     if (value === -2) {
       mood(playerId, 'robot-happy');
-      if (human) bubble(playerId, pick(['🤑 -2 !', 'Jackpot de boulons !', 'Hé hé hé 😏']));
+      if (human) bubble(playerId, pick(['🤑 -2 !', 'Jackpot di bulloni!', 'Eh eh eh 😏']));
     } else if (value >= 11) {
       mood(playerId, 'robot-cry');
-      if (human) bubble(playerId, pick(['😱', 'Aïe, ça pique les circuits !', 'Erreur 404 😵']));
+      if (human) bubble(playerId, pick(['😱', 'Ahi, mi pizzicano i circuiti!', 'Erreur 404 😵']));
     }
   }
 
@@ -617,15 +626,15 @@
       const who = e.player ? nameOf(e.player) : '';
       switch (e.type) {
         case 'joined':
-          if (!room.game && e.player !== you) { toast(`🤖 ${who} entre dans la salle !`); Sound.bip(); }
+          if (!room.game && e.player !== you) { toast(`🤖 ${who} entra nella sala!`); Sound.bip(); }
           break;
-        case 'left': toast(`🔋 ${e.name} est parti recharger ses batteries.`); break;
-        case 'disconnected': if (e.player !== you) toast(`📡 ${who} a perdu le signal…`, 'bad'); break;
-        case 'reconnected': if (e.player !== you) toast(`📶 ${who} est de retour !`); break;
-        case 'autopilot': toast(`🤖 Pilote automatique activé pour ${who} !`); break;
+        case 'left': toast(`🔋 ${e.name} è andato a ricaricare le batterie.`); break;
+        case 'disconnected': if (e.player !== you) toast(`📡 ${who} ha perso il segnale…`, 'bad'); break;
+        case 'reconnected': if (e.player !== you) toast(`📶 ${who} è tornato!`); break;
+        case 'autopilot': toast(`🤖 Pilota automatico attivato per ${who}!`); break;
         case 'roundStart':
           hideOverlay();
-          toast(`Manche ${e.round} ! Retourne 2 cartes 🔧`, 'hot');
+          toast(`Round ${e.round}! Gira 2 carte 🔧`, 'hot');
           Sound.ding();
           break;
         case 'flip':
@@ -655,26 +664,27 @@
         case 'column':
           setTimeout(() => Sound.laser(), 300);
           toast(e.value < 0
-            ? `💥 ${who} pulvérise une colonne de ${e.value}… les robots pleurent de l'huile 😭`
-            : `💥 TRIPLE ${e.value} ! ${who} pulvérise une colonne !`, 'hot');
+            ? `💥 ${who} polverizza una colonna di ${e.value}… i robot piangono olio 😭`
+            : `💥 TRIPLO ${e.value}! ${who} polverizza una colonna!`, 'hot');
           shake($('#screen-game'));
           mood(e.player, 'robot-happy');
           break;
         case 'finisher':
           Sound.alarm();
-          toast(e.player === you ? '⏰ Tu as tout retourné ! Les autres jouent un dernier tour…' : `⏰ ${who} a tout retourné ! DERNIER TOUR !`, 'hot', 3.5);
+          toast(e.player === you ? `⏰ ${myName()}, hai girato tutto! Gli altri fanno un ultimo giro…` : `⏰ ${who} ha girato tutto! ULTIMO GIRO!`, 'hot', 3.5);
           break;
         case 'turn':
           if (e.player === you) {
             Sound.ding();
-            if (e.lastTurn) toast('⏰ C\'est ton DERNIER tour, fais-le compter !', 'hot');
+            if (!e.lastTurn) toast(`🎯 Tocca a te, ${myName()}!`);
+            if (e.lastTurn) toast(`⏰ ${myName()}, è il tuo ULTIMO turno, fallo contare!`, 'hot');
           }
           break;
-        case 'reshuffle': toast('♻️ Pioche vide ! On recycle la défausse…'); break;
+        case 'reshuffle': toast('♻️ Mazzo vuoto! Ricicliamo gli scarti…'); break;
         case 'roundEnd': {
           const d = e.scores.find(s => s.doubled);
           setTimeout(() => {
-            if (d) { Sound.fail(); toast(`⚡ Points DOUBLÉS pour ${nameOf(d.id)} ! Court-circuit !`, 'bad', 3.5); mood(d.id, 'robot-cry'); }
+            if (d) { Sound.fail(); toast(`⚡ Punti RADDOPPIATI per ${nameOf(d.id)}! Cortocircuito!`, 'bad', 3.5); mood(d.id, 'robot-cry'); }
             else Sound.ding();
           }, 900);
           break;
@@ -696,7 +706,7 @@
   }
 
   // ---------- Émoticônes ----------
-  const EMOTES = ['🤖 Bip boup !', '😂', '😱', '🔥', '👏', '😎', '🥶', 'Trop fort !', 'Noooon !', 'GG 🤝'];
+  const EMOTES = ['🤖 Bip bup!', '😂', '😱', '🔥', '👏', '😎', '🥶', 'Fortissimo!', 'Nooooo!', 'GG 🤝'];
   EMOTES.forEach(t => {
     const b = el('button', '', t);
     b.onclick = () => server.emit('emote', { text: t }, () => {});
@@ -738,13 +748,13 @@
       });
       if (r.status === 404) return { error: OFFLINE };
       res = await r.json();
-      if (offline) { offline = false; toast('📶 Connexion rétablie !'); }
+      if (offline) { offline = false; toast('📶 Connessione ristabilita!'); }
     } catch (e) {
-      if (!offline) { offline = true; toast('📡 Connexion perdue… je réessaie !', 'bad'); }
-      return { error: 'Pas de connexion au serveur 📡' };
+      if (!offline) { offline = true; toast('📡 Connessione persa… riprovo!', 'bad'); }
+      return { error: 'Nessuna connessione al server 📡' };
     }
     if (res.gone && room && body.op !== 'join' && body.op !== 'create') {
-      toast('🚪 Tu ne fais plus partie de cette salle.', 'bad');
+      toast('🚪 Non fai più parte di questa sala.', 'bad');
       goHome();
       return res;
     }

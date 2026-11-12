@@ -361,3 +361,5 @@ main { padding: 0 16px 24px; max-width: 1200px; margin: 0 auto; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.greeting { font-family: 'Bungee', sans-serif; font-size: 1.15rem; color: #ffb547; margin: .2rem 0 .3rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }

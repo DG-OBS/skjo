@@ -1,6 +1,6 @@
-# 🤖 Robo-Skyjo
+# 🤖 SKYJO-Robo
 
-Das Kartenspiel **Skyjo** als Multiplayer-Webapp – komplett auf **Französisch**, mit Roboter-Thema, Humor, Animationen und Soundeffekten. Gedacht für Kinder ab ca. 10 Jahren.
+Das Kartenspiel **Skyjo** als Multiplayer-Webapp – komplett auf **Italienisch**, mit Roboter-Thema, Humor, Animationen und Soundeffekten. Gedacht für Kinder ab ca. 10 Jahren.
 
 ## Features
 
@@ -30,7 +30,7 @@ Einmalige Einrichtung:
 1. Vercel-Dashboard → Projekt **skjo** → Tab **Storage** → **Create Database** → **Upstash for Redis** (Gratis-Plan) → mit dem Projekt verbinden. Dadurch werden `KV_REST_API_URL` und `KV_REST_API_TOKEN` automatisch gesetzt.
 2. **Deployments** → letztes Deployment → **Redeploy**, damit die neuen Variablen aktiv werden.
 
-Ohne Datenbank zeigt das Spiel beim Klick auf „Créer une partie“ eine entsprechende Meldung an.
+Ohne Datenbank zeigt das Spiel beim Klick auf „Crea una partita“ eine entsprechende Meldung an.
 
 Grobe Kosten: Pro Spieler und Minute fallen etwa 60–70 Redis-Befehle an. Der Upstash-Gratis-Plan reicht damit für Dutzende Partien pro Monat.
 
